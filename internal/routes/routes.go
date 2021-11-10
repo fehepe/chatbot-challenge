@@ -19,6 +19,7 @@ func ApiSetup() {
 	app.Post("/api/login", controllers.Login)
 	app.Get("/api/user", controllers.User)
 	app.Post("/api/logout", controllers.Logout)
+	app.Get("/api/stock", controllers.GetStock)
 	app.Listen(":8080")
 }
 

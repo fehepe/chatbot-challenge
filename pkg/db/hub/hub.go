@@ -84,6 +84,9 @@ func (h *Hub) Run() {
 				}
 			} else if message.Type == "chatmessage" {
 				// chatmessages
+				// if strings.s message.Message  {
+
+				// }
 				for client := range h.clients {
 					if client.room == message.Room {
 						select {
