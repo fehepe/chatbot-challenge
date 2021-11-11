@@ -20,13 +20,18 @@ func ApiSetup() {
 	app.Get("/api/user", controllers.User)
 	app.Post("/api/logout", controllers.Logout)
 	app.Get("/api/stock", controllers.GetStock)
-	app.Listen(":8080")
+	app.Listen(":3000")
 }
 
 func WebSetup() {
 	hubConn := hub.NewHub()
 	go hubConn.Run()
-	http.HandleFunc("/", controllers.Index)
+	http.HandleFunc("/login", controllers.LoginHandler)
+	http.HandleFunc("/loginauth", controllers.LoginAuthHandler)
+	http.HandleFunc("/register", controllers.RegisterHandler)
+	http.HandleFunc("/registerauth", controllers.RegisterAuthHandler)
+
+	//http.HandleFunc("/", controllers.Index)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		hub.ServeWs(hubConn, w, r)
 	})

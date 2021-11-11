@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -95,4 +98,35 @@ func GetStock(c *fiber.Ctx) error {
 		})
 	}
 
+}
+
+// map[string]string{
+// 	"name":  "Toby",
+// 	"email": "Toby@example.com",
+// }
+
+func Post(params map[string]string, endpoint string) ([]byte, error) {
+	apiURL := os.Getenv("API")
+	//Encode the data
+	postBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBody := bytes.NewBuffer(postBody)
+	//Leverage Go's HTTP Post function to make request
+	resp, err := http.Post("http://"+apiURL+endpoint, "application/json", responseBody)
+	//Handle Error
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	//Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
