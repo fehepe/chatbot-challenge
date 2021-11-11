@@ -34,7 +34,7 @@ func LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 	delete(session.Values, "id")
 	session.Save(r, w)
-	tpl.ExecuteTemplate(w, "login.html", nil)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 // loginAuthHandler authenticates user login
@@ -70,6 +70,7 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, _ := store.Get(r, "session")
 	session.Values["id"] = resp.Id
+	session.Values["name"] = resp.Name
 	sessions.Save(r, w)
 	tpl.ExecuteTemplate(w, "index.html", nil)
 
@@ -140,5 +141,9 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	session, _ := store.Get(r, "session")
+	session.Values["id"] = resp.Id
+	session.Values["name"] = resp.Name
+	sessions.Save(r, w)
 	tpl.ExecuteTemplate(w, "index.html", nil)
 }
