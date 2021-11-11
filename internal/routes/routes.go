@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/fehepe/chatbot-challenge/internal/controllers"
-	"github.com/fehepe/chatbot-challenge/pkg/db/hub"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gorilla/context"
 )
 
 func ApiSetup() {
@@ -24,17 +24,16 @@ func ApiSetup() {
 }
 
 func WebSetup() {
-	hubConn := hub.NewHub()
-	go hubConn.Run()
+
 	http.HandleFunc("/login", controllers.LoginHandler)
+	http.HandleFunc("/logout", controllers.LoginHandler)
 	http.HandleFunc("/loginauth", controllers.LoginAuthHandler)
 	http.HandleFunc("/register", controllers.RegisterHandler)
 	http.HandleFunc("/registerauth", controllers.RegisterAuthHandler)
+	http.HandleFunc("/ws", controllers.ChatServer)
+	http.HandleFunc("/", controllers.IndexHandler)
 
-	//http.HandleFunc("/", controllers.Index)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		hub.ServeWs(hubConn, w, r)
-	})
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("../../web"))))
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	log.Fatal(http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux)))
 }

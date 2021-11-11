@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/fehepe/chatbot-challenge/internal/models"
+	"github.com/fehepe/chatbot-challenge/pkg/db/hub"
+	"github.com/gorilla/sessions"
 )
 
-var tpl *template.Template
+var (
+	key   = []byte("secret")
+	tpl   *template.Template
+	store = sessions.NewCookieStore(key)
+)
 
 func init() {
 	tpl = template.Must(template.ParseGlob("../../web/*.html"))
@@ -19,6 +26,14 @@ func init() {
 // loginHandler serves form for users to login with
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("*****loginHandler running*****")
+	tpl.ExecuteTemplate(w, "login.html", nil)
+}
+
+func LogOutHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("*****LogOutHandler running*****")
+	session, _ := store.Get(r, "session")
+	delete(session.Values, "id")
+	session.Save(r, w)
 	tpl.ExecuteTemplate(w, "login.html", nil)
 }
 
@@ -38,30 +53,56 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := Post(params, "/api/login")
 	if err != nil {
-		fmt.Println("error trying to  Hash in db by Username")
+		fmt.Println("error doing the login request")
 		tpl.ExecuteTemplate(w, "login.html", "Conection Error.")
 		return
 	}
-	var resp models.Response
+	if strings.Contains(string(response), "message") {
+		fmt.Println("incorrect password")
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
+	}
 
+	var resp models.User
 	if err = json.Unmarshal(response, &resp); err != nil {
 		log.Fatal("ooopsss! an error occurred, please try again")
 	}
 
-	if resp.Message == "success" {
-		//fmt.Fprint(w, "You have successfully logged in :)")
-		tpl.ExecuteTemplate(w, "index.html", nil)
+	session, _ := store.Get(r, "session")
+	session.Values["id"] = resp.Id
+	sessions.Save(r, w)
+	tpl.ExecuteTemplate(w, "index.html", nil)
+
+}
+
+// registerHandler serves form for registring new users
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("*****IndexHandler running*****")
+	session, _ := store.Get(r, "session")
+	_, ok := session.Values["id"]
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-
-	fmt.Println("incorrect password")
-	tpl.ExecuteTemplate(w, "login.html", "check username and password")
+	tpl.ExecuteTemplate(w, "index.html", nil)
 }
 
 // registerHandler serves form for registring new users
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("*****registerHandler running*****")
 	tpl.ExecuteTemplate(w, "register.html", nil)
+}
+
+func ChatServer(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+	_, ok := session.Values["id"]
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	hubConn := hub.NewHub()
+	go hubConn.Run()
+	hub.ServeWs(hubConn, w, r)
 }
 
 //registerAuthHandler creates new user in database
@@ -87,17 +128,17 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "register.html", "Conection Error.")
 		return
 	}
-	var resp models.User
 
+	var resp models.User
 	if err = json.Unmarshal(response, &resp); err != nil {
 		log.Fatal("ooopsss! an error occurred, please try again")
 	}
 
-	if resp.Id != 0 {
-		tpl.ExecuteTemplate(w, "index.html", nil)
+	if resp.Id == 0 {
+		fmt.Println("error inserting new user")
+		tpl.ExecuteTemplate(w, "register.html", "there was a problem registering account")
 		return
 	}
 
-	fmt.Println("error inserting new user")
-	tpl.ExecuteTemplate(w, "register.html", "there was a problem registering account")
+	tpl.ExecuteTemplate(w, "index.html", nil)
 }
