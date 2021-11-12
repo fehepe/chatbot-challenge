@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fehepe/chatbot-challenge/pkg/stock"
 	"github.com/gorilla/websocket"
 )
 
@@ -27,8 +28,9 @@ const (
 )
 
 var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
+	newline   = []byte{'\n'}
+	space     = []byte{' '}
+	CmdResult = ""
 )
 
 var upgrader = websocket.Upgrader{
@@ -76,11 +78,13 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: string(message), Type: "chatmessage", Time: time.Now().Format("3:04 pm")}
-		fmt.Println(message)
+
 		if strings.Contains(string(message), "/") {
 			cmd := string(message)
 			if strings.HasPrefix(cmd, "/stock=") {
-				//cmd = strings.ReplaceAll(cmd, "/stock=", "")
+				code := strings.ReplaceAll(cmd, "/stock=", "")
+				cmdStock, _ := stock.GetStockFromAPI(code)
+				CmdResult = cmdStock.Response
 				stockCmd := formatMessage{Username: "ChatBot", Room: c.room,
 					Message: "stock", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 				c.hub.broadcast <- stockCmd

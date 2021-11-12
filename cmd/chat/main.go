@@ -14,5 +14,4 @@ func main() {
 	}
 
 	routes.WebSetup()
-
 }
