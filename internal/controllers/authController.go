@@ -6,7 +6,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fehepe/chatbot-challenge/internal/models"
-	"github.com/fehepe/chatbot-challenge/pkg/db/mysql"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,18 +19,10 @@ func Register(c *fiber.Ctx) error {
 		return err
 	}
 
-	password, err := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
+	user, err := models.NewUser(data)
 	if err != nil {
 		return err
 	}
-
-	user := models.User{
-		Name:     data["name"],
-		UserName: data["username"],
-		Password: password,
-	}
-
-	mysql.DB.DbClient.Create(&user)
 
 	return c.JSON(user)
 }
@@ -43,9 +34,10 @@ func Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	var user models.User
-
-	mysql.DB.DbClient.Where("user_name = ?", data["username"]).First(&user)
+	user, err := models.GetUserByUserName(data)
+	if err != nil {
+		return err
+	}
 
 	if user.Id == 0 {
 		c.Status(fiber.StatusNotFound)
@@ -103,9 +95,10 @@ func User(c *fiber.Ctx) error {
 
 	claims := token.Claims.(*jwt.StandardClaims)
 
-	var user models.User
-
-	mysql.DB.DbClient.Where("id = ?", claims.Issuer).First(&user)
+	user, err := models.GetUserById(claims.Issuer)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(user)
 }

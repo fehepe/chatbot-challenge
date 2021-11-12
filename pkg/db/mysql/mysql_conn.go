@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 
-	"github.com/fehepe/chatbot-challenge/internal/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -24,8 +23,6 @@ func ConnectDB(mysqlDSN string) error {
 	}
 
 	DB = MySQL{DbClient: mysqlClient, Ctx: context}
-
-	DB.DbClient.AutoMigrate(&models.User{})
 
 	return nil
 

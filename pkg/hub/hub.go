@@ -2,8 +2,6 @@ package hub
 
 import (
 	"time"
-
-	"github.com/fehepe/chatbot-challenge/pkg/stock"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -56,7 +54,7 @@ func (h *Hub) Run() {
 
 			// botmessages
 			if message.Type == "botmessage" {
-				cmdStock, _ := stock.GetStockFromAPI("aapl.us")
+
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
@@ -78,15 +76,10 @@ func (h *Hub) Run() {
 									Message: message.Username + " has left the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "stock" {
 								msg = formatMessage{Username: "ChatBot", Room: client.room,
-									Message: "I do not have this command. Try another. **", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
-								client.send <- msg
-								break
+									Message: CmdResult, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "wrong" {
 								msg = formatMessage{Username: "ChatBot", Room: client.room,
-									Message: cmdStock.Response, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
-
-								client.send <- msg
-								break
+									Message: "I do not have this command. Try another.", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							}
 							select {
 							case client.send <- msg:

@@ -1,13 +1,7 @@
 package controllers
 
 import (
-	"encoding/csv"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	"os"
-	"strings"
 
 	"github.com/fehepe/chatbot-challenge/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -29,55 +23,19 @@ func GetStock(c *fiber.Ctx) error {
 		})
 	}
 
-	stockURL := os.Getenv("STOCK_URL")
-
-	parsedUrl, err := url.Parse(strings.Replace(stockURL, "STOCKCODE", data["code"], 1))
+	stockResponse, err := models.GetStock(data)
 	if err != nil {
 		return err
 	}
 
-	client := http.Client{}
-
-	resp, err := client.Get(parsedUrl.String())
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	reader := csv.NewReader(resp.Body)
-	reader.Comma = ','
-
-	var response models.Stock
-
-	for {
-		data, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-
-		if !strings.Contains(data[0], "Symbol") && len(data) == 8 {
-			response = models.Stock{
-				Symbol: data[0],
-				Date:   data[1],
-				Time:   data[2],
-				Open:   data[3],
-				High:   data[4],
-				Low:    data[5],
-				Close:  data[6],
-				Volume: data[7],
-			}
-		}
-	}
-
-	if response.Open == "N/D" {
+	if stockResponse.Open == "N/D" {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
-			"response": fmt.Sprintf("Your code: %s is not found.", response.Symbol),
+			"response": fmt.Sprintf("Your code: %s is not found.", stockResponse.Symbol),
 		})
 	} else {
 		return c.JSON(fiber.Map{
-			"response": fmt.Sprintf("%s quote is $%s per share.", response.Symbol, response.Open),
+			"response": fmt.Sprintf("%s quote is $%s per share.", stockResponse.Symbol, stockResponse.Open),
 		})
 	}
 
