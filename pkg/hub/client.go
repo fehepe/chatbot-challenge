@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -73,12 +74,24 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-
-		// broadcast the message to other users
 		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: string(message), Type: "chatmessage", Time: time.Now().Format("3:04 pm")}
 		fmt.Println(message)
+		if strings.Contains(string(message), "/") {
+			cmd := string(message)
+			if strings.HasPrefix(cmd, "/stock=") {
+				//cmd = strings.ReplaceAll(cmd, "/stock=", "")
+				stockCmd := formatMessage{Username: "ChatBot", Room: c.room,
+					Message: "stock", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+				c.hub.broadcast <- stockCmd
+			} else {
+				wrongCmd := formatMessage{Username: "ChatBot", Room: c.room,
+					Message: "wrong", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+				c.hub.broadcast <- wrongCmd
+			}
+
+		}
+
 	}
 }
 
@@ -122,16 +135,9 @@ func (c *Client) writePump() {
 				msg.Userlist = userlist
 			}
 
-			b, err := json.Marshal(msg)
+			b, _ := json.Marshal(msg)
 			fmt.Println(msg)
 			w.Write(b)
-
-			// Add queued chat messages to the current websocket message.
-			/*n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				//w.Write([]byte(<-c.send.message))
-			}*/
 
 			if err := w.Close(); err != nil {
 				return

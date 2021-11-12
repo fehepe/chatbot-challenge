@@ -9,18 +9,23 @@ import (
 	"text/template"
 
 	"github.com/fehepe/chatbot-challenge/internal/models"
-	"github.com/fehepe/chatbot-challenge/pkg/db/hub"
+	"github.com/fehepe/chatbot-challenge/pkg/hub"
+	"github.com/fehepe/chatbot-challenge/pkg/stock"
+
 	"github.com/gorilla/sessions"
 )
 
 var (
-	key   = []byte("secret")
-	tpl   *template.Template
-	store = sessions.NewCookieStore(key)
+	key     = []byte("secret")
+	tpl     *template.Template
+	store   = sessions.NewCookieStore(key)
+	hubConn *hub.Hub
 )
 
 func init() {
 	tpl = template.Must(template.ParseGlob("../../web/*.html"))
+	hubConn = hub.NewHub()
+	go hubConn.Run()
 }
 
 // loginHandler serves form for users to login with
@@ -31,10 +36,22 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("*****LogOutHandler running*****")
+	response, err := stock.Post(nil, "/api/logout")
+	if err != nil {
+		fmt.Println("error doing the login request")
+		tpl.ExecuteTemplate(w, "login.html", "Conection Error.")
+		return
+	}
+
+	var resp models.Response
+	if err = json.Unmarshal(response, &resp); err != nil {
+		log.Fatal("ooopsss! an error occurred, please try again")
+	}
+
 	session, _ := store.Get(r, "session")
 	delete(session.Values, "id")
 	session.Save(r, w)
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // loginAuthHandler authenticates user login
@@ -51,15 +68,20 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 		"password": password,
 	}
 
-	response, err := Post(params, "/api/login")
+	response, err := stock.Post(params, "/api/login")
 	if err != nil {
 		fmt.Println("error doing the login request")
 		tpl.ExecuteTemplate(w, "login.html", "Conection Error.")
 		return
 	}
+
 	if strings.Contains(string(response), "message") {
+		var resp models.Response
+		if err = json.Unmarshal(response, &resp); err != nil {
+			log.Fatal("ooopsss! an error occurred, please try again")
+		}
 		fmt.Println("incorrect password")
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		tpl.ExecuteTemplate(w, "login.html", resp.Message)
 		return
 	}
 
@@ -72,7 +94,7 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["id"] = resp.Id
 	session.Values["name"] = resp.Name
 	sessions.Save(r, w)
-	tpl.ExecuteTemplate(w, "index.html", nil)
+	http.Redirect(w, r, "/", http.StatusFound)
 
 }
 
@@ -85,7 +107,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	tpl.ExecuteTemplate(w, "index.html", nil)
+	name, _ := session.Values["name"]
+
+	tpl.ExecuteTemplate(w, "index.html", name)
 }
 
 // registerHandler serves form for registring new users
@@ -101,8 +125,7 @@ func ChatServer(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	hubConn := hub.NewHub()
-	go hubConn.Run()
+
 	hub.ServeWs(hubConn, w, r)
 }
 
@@ -123,7 +146,7 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 		"password": password,
 	}
 
-	response, err := Post(params, "/api/register")
+	response, err := stock.Post(params, "/api/register")
 	if err != nil {
 		fmt.Println("error trying to register the user")
 		tpl.ExecuteTemplate(w, "register.html", "Conection Error.")
@@ -145,5 +168,5 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["id"] = resp.Id
 	session.Values["name"] = resp.Name
 	sessions.Save(r, w)
-	tpl.ExecuteTemplate(w, "index.html", nil)
+	http.Redirect(w, r, "/", http.StatusFound)
 }

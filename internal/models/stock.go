@@ -1,6 +1,6 @@
 package models
 
-type StockResponse struct {
+type Stock struct {
 	Symbol string
 	Date   string
 	Time   string

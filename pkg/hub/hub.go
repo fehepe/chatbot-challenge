@@ -2,6 +2,8 @@ package hub
 
 import (
 	"time"
+
+	"github.com/fehepe/chatbot-challenge/pkg/stock"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -51,8 +53,10 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+
 			// botmessages
 			if message.Type == "botmessage" {
+				cmdStock, _ := stock.GetStockFromAPI("aapl.us")
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
@@ -72,6 +76,17 @@ func (h *Hub) Run() {
 							} else if message.Message == "leave" {
 								msg = formatMessage{Username: "ChatBot", Room: client.room,
 									Message: message.Username + " has left the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+							} else if message.Message == "stock" {
+								msg = formatMessage{Username: "ChatBot", Room: client.room,
+									Message: "I do not have this command. Try another. **", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+								client.send <- msg
+								break
+							} else if message.Message == "wrong" {
+								msg = formatMessage{Username: "ChatBot", Room: client.room,
+									Message: cmdStock.Response, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+
+								client.send <- msg
+								break
 							}
 							select {
 							case client.send <- msg:
@@ -83,10 +98,6 @@ func (h *Hub) Run() {
 					}
 				}
 			} else if message.Type == "chatmessage" {
-				// chatmessages
-				// if strings.s message.Message  {
-
-				// }
 				for client := range h.clients {
 					if client.room == message.Room {
 						select {

@@ -19,14 +19,14 @@ func ApiSetup() {
 	app.Post("/api/login", controllers.Login)
 	app.Get("/api/user", controllers.User)
 	app.Post("/api/logout", controllers.Logout)
-	app.Get("/api/stock", controllers.GetStock)
+	app.Post("/api/stock", controllers.GetStock)
 	app.Listen(":3000")
 }
 
 func WebSetup() {
 
 	http.HandleFunc("/login", controllers.LoginHandler)
-	http.HandleFunc("/logout", controllers.LoginHandler)
+	http.HandleFunc("/logout", controllers.LogOutHandler)
 	http.HandleFunc("/loginauth", controllers.LoginAuthHandler)
 	http.HandleFunc("/register", controllers.RegisterHandler)
 	http.HandleFunc("/registerauth", controllers.RegisterAuthHandler)

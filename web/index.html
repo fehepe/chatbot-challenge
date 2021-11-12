@@ -21,24 +21,22 @@
 			<main class="join-main">
 				<form action="/public/chat.html">
 					<div class="form-control">
-						<label for="username">Username</label>
+						<label for="username">Your Name:</label>
 						<input
 							type="text"
 							name="username"
 							id="username"
-							value="Norway"
+							value="{{.}}"
 							readonly
-						/>
+						></input>
 					</div>
 					<div class="form-control">
-						<label for="room">Room</label>
+						<label for="room">Teams</label>
 						<select name="room" id="room">
-							<option value="Golang">Golang</option>
-							<option value="JavaScript">JavaScript</option>
-							<option value="Python">Python</option>
-							<option value="PHP">PHP</option>
-							<option value="Ruby">Ruby</option>
-							<option value="Java">Java</option>
+							<option value="DevOps">DevOps</option>
+							<option value="BackEnd">BackEnd</option>
+							<option value="FrontEnd">FrontEnd</option>
+							<option value="Product">Product</option>
 						</select>
 					</div>
 					<button type="submit" class="btn">Join Chat</button>
