@@ -11,7 +11,6 @@ const { username, room } = Qs.parse(location.search, {
 console.log(username)
 console.log(room)
 
-//const socket = io();
 
 
 // *****
@@ -21,9 +20,6 @@ if (window["WebSocket"]) {
   outputRoomName(room);
 
   conn.onclose = function (evt) {
-            /*var item = document.createElement("div");
-            item.innerHTML = "<b>Connection closed.</b>";
-            appendLog(item);*/
             console.log("Connection close")
   };
   conn.onmessage = function (evt) {
@@ -36,12 +32,8 @@ if (window["WebSocket"]) {
     outputMessage(msg)
   };
 } else {
-  /*var item = document.createElement("div");
-  item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-  appendLog(item);*/
   console.log("Your browser does not support WebSockets.")
 }
-// *****
 
 // Message submit
 chatForm.addEventListener('submit', e => {
