@@ -60,7 +60,7 @@ After install the dependencies and make sure the docker containers are running n
 ### **WebApi**
 
 
-### **WebServer**
+### **WebChat**
 
 
 # Screenshots
