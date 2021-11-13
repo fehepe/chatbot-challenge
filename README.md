@@ -53,14 +53,21 @@ reusability.
 	docker run --name chatdb -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql:lastest
 	````
 
-### Run projects
+## Run projects
 
 After install the dependencies and make sure the docker containers are running now we can continue to run the projects in the following order:
 
-## **WebApi**
+### **WebApi**
 
 
-## **WebServer**
+### **WebServer**
 
 
 # Screenshots
+
+![Chat LoginPage](https://github.com/fehepe/chatbot-challenge/blob/main/img/LoginPage.png?raw=true)
+![Chat RegisterPage](https://github.com/fehepe/chatbot-challenge/blob/main/img/RegisterPage.png?raw=true)
+![Chat RoomPage](https://github.com/fehepe/chatbot-challenge/blob/main/img/RoomPage.png?raw=true)
+![Chat ChatPage](https://github.com/fehepe/chatbot-challenge/blob/main/img/ChatPage.png?raw=true)
+![Chat 2ClientChat](https://github.com/fehepe/chatbot-challenge/blob/main/img/2ClientChat.png?raw=true)
+![Chat BotCmds](https://github.com/fehepe/chatbot-challenge/blob/main/img/BotCmds.png?raw=true)
