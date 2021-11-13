@@ -12,22 +12,24 @@ import (
 )
 
 func ApiSetup() {
-
 	models.AutoMigrate()
+
 	app := fiber.New()
+
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 	}))
+
 	app.Post("/api/register", controllers.Register)
 	app.Post("/api/login", controllers.Login)
 	app.Get("/api/user", controllers.User)
 	app.Post("/api/logout", controllers.Logout)
 	app.Post("/api/stock", controllers.GetStock)
+
 	app.Listen(":3000")
 }
 
 func WebSetup() {
-
 	http.HandleFunc("/login", controllers.LoginHandler)
 	http.HandleFunc("/logout", controllers.LogOutHandler)
 	http.HandleFunc("/loginauth", controllers.LoginAuthHandler)

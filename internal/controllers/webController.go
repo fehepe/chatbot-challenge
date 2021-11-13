@@ -80,15 +80,24 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("ooopsss! an error occurred, please try again")
 	}
 
-	session, _ := store.Get(r, "session")
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	session.Values["id"] = resp.Id
 	session.Values["name"] = resp.Name
+
 	sessions.Save(r, w)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	_, ok := session.Values["id"]
 	if !ok {
@@ -105,7 +114,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChatServer(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Fatal(err)
+	}
 	_, ok := session.Values["id"]
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusFound)
@@ -117,9 +129,11 @@ func ChatServer(w http.ResponseWriter, r *http.Request) {
 
 func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
+
 	username := r.FormValue("username")
 	name := r.FormValue("name")
 	password := r.FormValue("password")
+
 	if password == "" || name == "" || username == "" || len(password) < 4 || len(name) < 4 || len(username) < 4 {
 		tpl.ExecuteTemplate(w, "register.html", "please check username, name and password must be longer than 4")
 		return
@@ -147,9 +161,15 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _ := store.Get(r, "session")
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	session.Values["id"] = resp.Id
 	session.Values["name"] = resp.Name
+
 	sessions.Save(r, w)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }

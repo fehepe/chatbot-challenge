@@ -4,14 +4,13 @@ import (
 	"time"
 )
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+// Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	// Registered clients.
 	clients map[*Client]bool
 
 	// Inbound messages from the clients.
-	broadcast chan formatMessage
+	broadcast chan Message
 
 	// Register requests from the clients.
 	register chan *Client
@@ -20,10 +19,9 @@ type Hub struct {
 	unregister chan *Client
 }
 
-type formatMessage struct {
+type Message struct {
 	Username string
 	Message  string
-	// chatmessage / botmessage for message type
 	Type     string
 	Userlist []string
 	Room     string
@@ -33,7 +31,7 @@ type formatMessage struct {
 func NewHub() *Hub {
 	return &Hub{
 		//broadcast:  make(chan []byte),
-		broadcast:  make(chan formatMessage),
+		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
@@ -51,14 +49,11 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-
-			// botmessages
 			if message.Type == "botmessage" {
-
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
-							welcomemsg := formatMessage{Username: "ChatBot", Room: client.room,
+							welcomemsg := Message{Username: "ChatBot", Room: client.room,
 								Message: "Welcome to the chat room " + message.Username, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							select {
 							case client.send <- welcomemsg:
@@ -67,18 +62,18 @@ func (h *Hub) Run() {
 								delete(h.clients, client)
 							}
 						} else {
-							var msg formatMessage
+							var msg Message
 							if message.Message == "welcome" {
-								msg = formatMessage{Username: "ChatBot", Room: client.room,
+								msg = Message{Username: "ChatBot", Room: client.room,
 									Message: message.Username + " has entered the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "leave" {
-								msg = formatMessage{Username: "ChatBot", Room: client.room,
+								msg = Message{Username: "ChatBot", Room: client.room,
 									Message: message.Username + " has left the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "stock" {
-								msg = formatMessage{Username: "ChatBot", Room: client.room,
+								msg = Message{Username: "ChatBot", Room: client.room,
 									Message: CmdResult, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "wrong" {
-								msg = formatMessage{Username: "ChatBot", Room: client.room,
+								msg = Message{Username: "ChatBot", Room: client.room,
 									Message: "I do not have this command. Try another.", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							}
 							select {

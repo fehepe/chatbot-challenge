@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"strings"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -17,12 +18,20 @@ type MySQL struct {
 func ConnectDB(mysqlDSN string) error {
 	context := context.Background()
 
-	mysqlClient, err := gorm.Open(mysql.Open(mysqlDSN), &gorm.Config{})
+	conn := strings.ReplaceAll(mysqlDSN, "chatdb", "")
+	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
 	if err != nil {
 		return err
 	}
 
-	DB = MySQL{DbClient: mysqlClient, Ctx: context}
+	_ = db.Exec("CREATE DATABASE IF NOT EXISTS chatdb;")
+
+	db, err = gorm.Open(mysql.Open(mysqlDSN), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	DB = MySQL{DbClient: db, Ctx: context}
 
 	return nil
 

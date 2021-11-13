@@ -48,7 +48,7 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	// send chan []byte
-	send chan formatMessage
+	send chan Message
 
 	username string
 	room     string
@@ -77,26 +77,30 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: string(message), Type: "chatmessage", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- Message{Username: c.username, Room: c.room, Message: string(message), Type: "chatmessage", Time: time.Now().Format("3:04 pm")}
 
 		if strings.Contains(string(message), "/") {
 			cmd := string(message)
 			if strings.HasPrefix(cmd, "/stock=") {
 				code := strings.ReplaceAll(cmd, "/stock=", "")
-				cmdStock, _ := stock.GetStockFromAPI(code)
+
+				cmdStock, err := stock.GetStockFromAPI(code)
+				if err != nil {
+					log.Print("GetStockFromAPI error:" + err.Error())
+
+				}
+
 				CmdResult = cmdStock.Response
-				stockCmd := formatMessage{Username: "ChatBot", Room: c.room,
+				stockCmd := Message{Username: "ChatBot", Room: c.room,
 					Message: "stock", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 				c.hub.broadcast <- stockCmd
 			} else {
 				time.Sleep(2 * time.Second)
-				wrongCmd := formatMessage{Username: "ChatBot", Room: c.room,
+				wrongCmd := Message{Username: "ChatBot", Room: c.room,
 					Message: "wrong", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 				c.hub.broadcast <- wrongCmd
 			}
-
 		}
-
 	}
 }
 
@@ -108,17 +112,17 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- Message{Username: c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 
 		ticker.Stop()
 		c.conn.Close()
 	}()
 	// broadcast welcome messages
-	c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+	c.hub.broadcast <- Message{Username: c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 
 	for {
 		select {
-		// formatMessage send from hub.broadcast
+		// Message send from hub.broadcast
 		case msg, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
@@ -173,7 +177,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		room = r.URL.Query()["room"][0]
 	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan formatMessage), username: username, room: room}
+	client := &Client{hub: hub, conn: conn, send: make(chan Message), username: username, room: room}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

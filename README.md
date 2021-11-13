@@ -31,7 +31,7 @@ reusability.
 - [x] Create a decoupled bot that will call an API using the stock_code as a parameter (https://stooq.com/q/l/?s=aapl.us&f=sd2t2ohlcv&h&e=csv, here aapl.us is the stock_code).
 - [x] The bot should parse the received CSV file and then it should send a message back into the chatroom using a message broker like RabbitMQ. The message will be a stock quote using the following format: “APPL.US quote is $93.42 per share”. The post owner will be the bot.
 - [x] Have the chat messages ordered by their timestamps and show only the last 50 messages.
-- [x] Unit test the functionality you prefer.
+- [ ] Unit test the functionality you prefer.
 
 # Bonus (Optional)
 
@@ -59,8 +59,27 @@ After install the dependencies and make sure the docker containers are running n
 
 ### **WebApi**
 
+- Open the terminal and go to the following repository directory `chatbot-challenge/cmd/api/`
+
+- To Start the web API, run this command:
+
+    ````
+	go run main.go
+	````
+
+After executing the previous steps, you are be able to consume the api.
 
 ### **WebChat**
+
+- Open the terminal and go to the following repository directory `chatbot-challenge/cmd/chat/`
+
+- To Start the web Chat, run this command:
+
+    ````
+	go run main.go
+	````
+
+After executing the previous steps, if you click [here](http://localhost:8080) or write in the browser "http://localhost:8080" you should be able to see the web app running.
 
 
 # Screenshots
