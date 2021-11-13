@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -28,17 +27,13 @@ func init() {
 	go hubConn.Run()
 }
 
-// loginHandler serves form for users to login with
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****loginHandler running*****")
 	tpl.ExecuteTemplate(w, "login.html", nil)
 }
 
 func LogOutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****LogOutHandler running*****")
 	response, err := stock.Post(nil, "/api/logout")
 	if err != nil {
-		fmt.Println("error doing the login request")
 		tpl.ExecuteTemplate(w, "login.html", "Conection Error.")
 		return
 	}
@@ -54,14 +49,10 @@ func LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// loginAuthHandler authenticates user login
 func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****loginAuthHandler running*****")
 	r.ParseForm()
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	fmt.Println("username:", username, "password:", password)
-	// retrieve password from db to compare (hash) with user supplied password's hash
 
 	params := map[string]string{
 		"username": username,
@@ -70,7 +61,6 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := stock.Post(params, "/api/login")
 	if err != nil {
-		fmt.Println("error doing the login request")
 		tpl.ExecuteTemplate(w, "login.html", "Conection Error.")
 		return
 	}
@@ -80,7 +70,7 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 		if err = json.Unmarshal(response, &resp); err != nil {
 			log.Fatal("ooopsss! an error occurred, please try again")
 		}
-		fmt.Println("incorrect password")
+
 		tpl.ExecuteTemplate(w, "login.html", resp.Message)
 		return
 	}
@@ -95,26 +85,22 @@ func LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["name"] = resp.Name
 	sessions.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
-
 }
 
-// registerHandler serves form for registring new users
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****IndexHandler running*****")
 	session, _ := store.Get(r, "session")
+
 	_, ok := session.Values["id"]
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	name, _ := session.Values["name"]
 
+	name := session.Values["name"]
 	tpl.ExecuteTemplate(w, "index.html", name)
 }
 
-// registerHandler serves form for registring new users
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****registerHandler running*****")
 	tpl.ExecuteTemplate(w, "register.html", nil)
 }
 
@@ -129,7 +115,6 @@ func ChatServer(w http.ResponseWriter, r *http.Request) {
 	hub.ServeWs(hubConn, w, r)
 }
 
-//registerAuthHandler creates new user in database
 func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.FormValue("username")
@@ -148,7 +133,6 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := stock.Post(params, "/api/register")
 	if err != nil {
-		fmt.Println("error trying to register the user")
 		tpl.ExecuteTemplate(w, "register.html", "Conection Error.")
 		return
 	}
@@ -159,7 +143,6 @@ func RegisterAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if resp.Id == 0 {
-		fmt.Println("error inserting new user")
 		tpl.ExecuteTemplate(w, "register.html", "there was a problem registering account")
 		return
 	}

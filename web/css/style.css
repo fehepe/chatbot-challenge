@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 
 :root {
-	--dark-color-a: #eb0826;
+	--dark-color-a: #991627;
 	--dark-color-b: #e25555;
-	--light-color: #e6e9ff;
+	--light-color: #f3e9e9;
 	--success-color: #5cb85c;
 	--error-color: #d9534f;
 }
@@ -160,11 +160,17 @@ a {
 	margin-bottom: 5px;
 }
 
-.join-main input[type='text'] {
+.join-main input {
 	font-size: 16px;
 	padding: 5px;
 	height: 40px;
 	width: 100%;
+}
+
+.join-main input[type="password"] {
+	font-size: 16px;
+	padding: 5px;
+	height: 40px;
 }
 
 .join-main select {

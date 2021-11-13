@@ -89,6 +89,7 @@ func (c *Client) readPump() {
 					Message: "stock", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 				c.hub.broadcast <- stockCmd
 			} else {
+				time.Sleep(2 * time.Second)
 				wrongCmd := formatMessage{Username: "ChatBot", Room: c.room,
 					Message: "wrong", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 				c.hub.broadcast <- wrongCmd
